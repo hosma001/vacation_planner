@@ -5,16 +5,19 @@ import axios from 'axios';
 const VacationForm = ({ places, users, bookVacation })=> {
   const [placeId, setPlaceId] = useState('');
   const [userId, setUserId] = useState('');
+  const [note, setNote] = useState('');
 
-  const save = (ev)=> {
+  const save = async(ev)=> {
     ev.preventDefault();
     const vacation = {
       user_id: userId,
-      place_id: placeId
+      place_id: placeId,
+      note
     };
-    bookVacation(vacation);
+    await bookVacation(vacation);
     setPlaceId('');
     setUserId('');
+    setNote('');
   }
   return (
     <form onSubmit={ save }>
@@ -38,12 +41,24 @@ const VacationForm = ({ places, users, bookVacation })=> {
           })
         }
       </select>
-      <button disabled={ !placeId || !userId }>Book Vacation</button>
+      <input value={ note } onChange={ ev => setNote(ev.target.value) } />
+      <button disabled={ !placeId || !userId || !note }>Book Vacation</button>
     </form>
   );
 }
 
-const Users = ({ users, vacations })=> {
+const Users = ({ users, vacations, createUser })=> {
+  const [name, setName] = useState('');
+  
+  const save = async(ev)=> {
+    ev.preventDefault();
+    const user = {
+      name
+    }
+    await createUser(user);
+    setName('');
+  };
+
   return (
     <div>
       <h2>Users ({ users.length })</h2>
@@ -59,11 +74,15 @@ const Users = ({ users, vacations })=> {
           })
         }
       </ul>
+      <form onSubmit={ save }>
+        <input placeholder='add name' value={ name } onChange={ ev => setName(ev.target.value) } />
+        <button disabled={ !name }>Create User</button>
+      </form>
     </div>
   );
 };
 
-const Vacations = ({ vacations, places, cancelVacation, users })=> {
+const Vacations = ({ users, vacations, places, cancelVacation })=> {
 
   /*const mostPopularPlace = ()=> {
     let max = 0;
@@ -159,6 +178,11 @@ const App = ()=> {
     setVacations(vacations.filter(_vacation => _vacation.id !== vacation.id));
   }
 
+  const createUser = async(user)=> {
+    const response = await axios.post('/api/users', user);
+    setUsers([...users, response.data]);
+  }
+
   return (
     <div>
       <h1>Vacation Planner</h1>
@@ -170,7 +194,11 @@ const App = ()=> {
           cancelVacation={ cancelVacation }
           users={ users }
         />
-        <Users users={ users } vacations={ vacations }/>
+        <Users 
+        createUser={ createUser } 
+        users={ users } 
+        vacations={ vacations }
+        />
         <Places places={ places } vacations={ vacations }/>
       </main>
     </div>

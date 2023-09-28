@@ -72,6 +72,19 @@ app.post('/api/vacations', async(req, res, next)=> {
   }
 });
 
+app.post('/api/users', async(req, res, next)=> {
+  try{
+    const SQL = `
+      INSERT INTO users(name) VALUES($1) RETURNING *
+    `;
+    const response = await client.query(SQL, [ req.body.name ]);
+    res.send(response.rows[0]);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
 app.delete('/api/vacations/:id', async(req, res, next)=> {
   try{
     const SQL = `
@@ -105,7 +118,7 @@ const init = async()=> {
       place_id INTEGER REFERENCES places(id) NOT NULL,
       user_id INTEGER REFERENCES users(id) NOT NULL,
       created_at TIMESTAMP DEFAULT now(),
-      note VARCHAR(255)
+      note VARCHAR(255) NOT NULL
     );
     INSERT INTO users(name) VALUES ('moe');
     INSERT INTO users(name) VALUES ('larry');
@@ -120,7 +133,7 @@ const init = async()=> {
     INSERT INTO vacations(user_id, place_id, note) VALUES (
       (SELECT id FROM users WHERE name='lucy'),
       (SELECT id FROM places WHERE name='ICELAND'),
-      ('This vacation was great!')
+      ('Enjoy your trip!')
     );
   `;
   await client.query(SQL);
